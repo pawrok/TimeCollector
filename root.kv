@@ -1,0 +1,78 @@
+<RootLayout>:
+    box: box
+    orientation: 'vertical'
+    Label:
+        text: "Time tracker App"
+        size_hint_y: 0.1
+        # size: t1.size
+
+    ScrollView:
+        GridLayout:
+            id: box
+            cols: 1
+            size_hint_y: None
+            height: 0
+            # orientation: 'vertical'
+
+    BoxLayout:
+        size_hint_y: 0.1
+        padding: '5dp', '5dp'
+        TextInput:
+            size_hint_x: 0.75
+            padding_y: 12
+            id: tracker_name_input
+            multiline: False
+            background_active: ''
+            background_color: 0, 0, 0, 1
+            background_disabled_normal: ''
+            background_normal: ''
+            font_size: 15
+            foreground_color: 1, 1, 1, 1
+            hint_text: 'Tracker name...'
+        Button:
+            id: add_btn
+            background_normal: ''
+            background_color: 0, 0, 0, 1
+            size_hint_x: 0.25
+            on_press: app.create_new_tracker(tracker_name_input.text)
+            Image:
+                source: 'plus.png'
+                size: add_btn.size
+                pos: add_btn.pos
+
+
+
+<TrackerContainer>:
+    img: img
+    height: 100
+    size_hint: 1, None
+    padding: '5dp', '5dp'
+    BoxLayout:
+        orientation: 'vertical'
+        Button:
+            id: play_button
+            size_hint_y: 0.5
+            background_normal: ''
+            background_color: 0, 0, 0, 1
+            on_press:
+                if not root.has_timer: \
+                root.timer_event = app.start_timer(root.ID); \
+                root.has_timer = 1; \
+                img.source = 'pause.png';
+                else: \
+                app.stop_timer(root.timer_event, root.ID); \
+                root.has_timer = 0; \
+                img.source = 'play-button.png';
+            Image:
+                id: img
+                source: 'play-button.png'
+                size: play_button.size
+                pos: play_button.pos
+
+        Label:
+            id: time
+            size_hint_y: 0.25
+            text: '0:00:00'
+        Label:
+            size_hint_y: 0.25
+            text: root.name
