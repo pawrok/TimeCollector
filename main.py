@@ -35,6 +35,8 @@ class TrackerContainer(BoxLayout):
     
 class TimeTracker(App):
     def build(self):
+        self.title = 'Time Tracker'
+        # self.icon = 'myicon.png'
         self.trackers_count = -1
         self.trackers_indices = {}
         self.db = TinyDB('db.json')
@@ -81,16 +83,28 @@ class TimeTracker(App):
         else:
             new_id = id
 
-        self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name))
+        self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name, total_duration=total_time))
         self.root.ids['box'].height += TrackerContainer.height.defaultvalue
 
         self.match_ids_to_indices()
-
+        timer_index = self.trackers_indices.get(new_id)
+        self.root.ids['box'].children[timer_index].ids['time'].text = str(datetime.timedelta(seconds=total_time)).split('.')[0]
 
     def load_trackers(self):
         for item in self.db:
             print(item)
             self.create_new_tracker(item['tracker_name'], item['tracker_id'], item['total_time'])
+
+    def on_stop(self):
+        " saves all timer's time when exiting the app "
+
+        q = Query()
+
+        for index in range(len(self.root.ids['box'].children)):
+            id = self.root.ids['box'].children[index].ID
+            total_time = self.root.ids['box'].children[index].total_duration
+            self.db.update({'total_time': total_time}, q.tracker_id == id)
+
 
 if __name__ == '__main__':
     TimeTracker().run()
