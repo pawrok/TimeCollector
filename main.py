@@ -7,13 +7,7 @@ from kivy.uix.button import Button
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
-from kivy.graphics import Color, Rectangle, Canvas, ClearBuffers, ClearColor
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.recycleview import RecycleView 
-from kivy.properties import ListProperty, StringProperty, ObjectProperty, \
-        NumericProperty, BooleanProperty, AliasProperty
-from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
+from kivy.properties import StringProperty, NumericProperty
 from kivy.config import Config
 from kivy.clock import Clock
 
@@ -63,19 +57,19 @@ class TimeTracker(App):
 
     def start_stop_timer(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
-        if not self.root.ids['box'].children[timer_index].timer_on:
-            self.root.ids['box'].children[timer_index].timer_event = self.start_timer(timer_id)
+        tracker = self.root.ids['box'].children[timer_index]
+        if not tracker.timer_on:
+            tracker.timer_event = self.start_timer(timer_id)
         else:
             self.stop_timer(timer_id)
 
-
-
     def stop_timer(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
-        self.root.ids['box'].children[timer_index].timer_on = 0
-        self.root.ids['box'].children[timer_index].ids['img'].source = 'icons/play-button.png'
-        self.root.ids['box'].children[timer_index].timer_event.cancel()
-        self.root.ids['box'].children[timer_index].total_duration += self.root.ids['box'].children[timer_index].current_duration
+        tracker = self.root.ids['box'].children[timer_index]
+        tracker.timer_on = 0
+        tracker.ids['img'].source = 'icons/play-button.png'
+        tracker.timer_event.cancel()
+        tracker.total_duration += tracker.current_duration
 
     def stop_all_timers(self):
         for id, index in self.trackers_indices.items():
@@ -84,13 +78,14 @@ class TimeTracker(App):
 
     def update_label(self, dt, start_time, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
+        tracker = self.root.ids['box'].children[timer_index]
 
         diff = datetime.datetime.now() - start_time
-        self.root.ids['box'].children[timer_index].current_duration = diff.total_seconds()
+        tracker.current_duration = diff.total_seconds()
         
-        total = self.root.ids['box'].children[timer_index].current_duration + self.root.ids['box'].children[timer_index].total_duration
+        total = tracker.current_duration + tracker.total_duration
         t = str(datetime.timedelta(seconds=total)).split('.')
-        self.root.ids['box'].children[timer_index].ids['time'].text = t[0] + '.' + t[1][0:2]
+        tracker.ids['time'].text = t[0] + '.' + t[1][0:2]
 
     def create_new_tracker(self, new_name, id=-1, total_time=0.001):
         if id == -1:
@@ -133,7 +128,8 @@ class TimeTracker(App):
 if __name__ == '__main__':
     TimeTracker().run()
 
-# TODO: stop tracker when another is started
+# TODO: 
 #       reset button
 #       event saving statistics from a day to db (add and update)
 #       matplotlib creating plots and loading them to kivy
+#       better visuals
