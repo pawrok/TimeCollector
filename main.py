@@ -1,6 +1,6 @@
 import datetime
 from functools import partial
-from tinydb import TinyDB
+from tinydb import TinyDB, Query
 
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -38,9 +38,11 @@ class TimeTracker(App):
         self.trackers_count = -1
         self.trackers_indices = {}
         self.db = TinyDB('db.json')
+        # self.db.truncate()
 
         Builder.load_file('root.kv')
         self.root = RootLayout()
+        self.load_trackers()
         return self.root
 
     def match_ids_to_indices(self):
@@ -68,16 +70,27 @@ class TimeTracker(App):
         total = self.root.ids['box'].children[timer_index].current_duration + self.root.ids['box'].children[timer_index].total_duration
         self.root.ids['box'].children[timer_index].ids['time'].text = str(datetime.timedelta(seconds=total)).split('.')[0]
 
-    def create_new_tracker(self, new_name):
-        self.trackers_count += 1
-        new_id = self.trackers_count
+    def create_new_tracker(self, new_name, id=-1, total_time=0):
+        if id == -1:
+            if self.db.all():
+                max_id = sorted(self.db.all(), key=lambda k: k['tracker_id'])[-1]['tracker_id']
+            else:
+                max_id = -1
+            new_id = max_id + 1
+            self.db.insert({'tracker_name': new_name, 'tracker_id': new_id, 'total_time': total_time, 'past_data': {} })
+        else:
+            new_id = id
 
         self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name))
         self.root.ids['box'].height += TrackerContainer.height.defaultvalue
 
         self.match_ids_to_indices()
 
-        self.db.insert({'tracker_name': new_name, 'tracker_id': new_id, 'total_time': 0, 'past_data': {} })
+
+    def load_trackers(self):
+        for item in self.db:
+            print(item)
+            self.create_new_tracker(item['tracker_name'], item['tracker_id'], item['total_time'])
 
 if __name__ == '__main__':
     TimeTracker().run()
