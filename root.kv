@@ -1,12 +1,26 @@
 #:kivy 2.0
+#:import Factory kivy.factory.Factory
 
 <RootLayout>:
     box: box
     orientation: 'vertical'
-    Label:
-        text: "Time tracker App"
+    BoxLayout:
         size_hint_y: 0.1
-        # size: t1.size
+        Label:
+            text: "Time tracker"
+            size_hint_x: 0.7
+        BoxLayout:
+            size_hint_x: 0.3
+            padding: 15, 15
+            Button:
+                id: menu_btn
+                background_normal: ''
+                background_color: 0, 0, 0, 1
+                on_release: Factory.MenuPopup().open()
+                Image:
+                    source: 'icons/menu.png'
+                    size: menu_btn.size
+                    pos: menu_btn.pos
 
     ScrollView:
         GridLayout:
@@ -14,7 +28,6 @@
             cols: 1
             size_hint_y: None
             height: 0
-            # orientation: 'vertical'
 
     BoxLayout:
         size_hint_y: 0.1
@@ -43,7 +56,6 @@
                 pos: add_btn.pos
 
 
-
 <TrackerContainer>:
     img: img
     height: 100
@@ -51,25 +63,48 @@
     padding: '5dp', '5dp'
     BoxLayout:
         orientation: 'vertical'
-        Button:
-            id: play_button
+        BoxLayout:
             size_hint_y: 0.5
-            background_normal: ''
-            background_color: 0, 0, 0, 1
-            on_press:
-                if not root.timer_on: \
-                root.timer_event = app.start_timer(root.ID); \
-                root.timer_on = 1; \
-                img.source = 'icons/pause.png';
-                else: \
-                app.stop_timer(root.timer_event, root.ID); \
-                root.timer_on = 0; \
-                img.source = 'icons/play-button.png';
-            Image:
-                id: img
-                source: 'icons/play-button.png'
-                size: play_button.size
-                pos: play_button.pos
+            BoxLayout:
+                size_hint: 0.35, None
+                size: 40, 40
+                padding: 9, 12
+                Button:
+                    id: reset_button
+                    background_normal: ''
+                    background_color: 0, 0, 0, 1
+                    Image:
+                        id: r_img
+                        source: 'icons/refresh.png'
+                        size: reset_button.size
+                        pos: reset_button.pos
+            Button:
+                id: play_button
+                background_normal: ''
+                size_hint_x: 0.3
+                background_color: 0, 0, 0, 1
+                on_press: app.start_stop_timer(root.ID)
+                    # if not root.timer_on: \
+                    # root.timer_event = app.start_timer(root.ID); \
+                    # root.timer_on = 1; \
+                    # img.source = 'icons/pause.png';
+                    # else: \
+                    # app.stop_timer(root.timer_event, root.ID); \
+                    # root.timer_on = 0; \
+                    # img.source = 'icons/play-button.png';
+                Image:
+                    id: img
+                    source: 'icons/play-button.png'
+                    size: play_button.size
+                    pos: play_button.pos
+            BoxLayout:
+                size_hint: 0.35, None
+                size: 40, 40
+                # padding: 12, 12
+                Button:
+                    id: void_button
+                    background_normal: ''
+                    background_color: 0, 0, 0, 1
 
         Label:
             id: time
@@ -78,3 +113,20 @@
         Label:
             size_hint_y: 0.25
             text: root.name
+
+
+<MenuPopup@Popup>:
+    auto_dismiss: False
+    title: 'Menu'
+    size_hint: None, None
+    size: 180, 200
+    pos_hint: {'top': 1}
+    BoxLayout:
+        orientation: 'vertical'
+        Button:
+            text: 'Truncate all trackers'
+            on_release: app.db.truncate()
+
+        Button:
+            text: 'Close me!'
+            on_release: root.dismiss()
