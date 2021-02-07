@@ -73,6 +73,7 @@
                     id: reset_button
                     background_normal: ''
                     background_color: 0, 0, 0, 1
+                    on_release: app.reset_tracker_time(root.ID)
                     Image:
                         id: r_img
                         source: 'icons/refresh.png'
@@ -84,14 +85,6 @@
                 size_hint_x: 0.3
                 background_color: 0, 0, 0, 1
                 on_press: app.start_stop_timer(root.ID)
-                    # if not root.timer_on: \
-                    # root.timer_event = app.start_timer(root.ID); \
-                    # root.timer_on = 1; \
-                    # img.source = 'icons/pause.png';
-                    # else: \
-                    # app.stop_timer(root.timer_event, root.ID); \
-                    # root.timer_on = 0; \
-                    # img.source = 'icons/play-button.png';
                 Image:
                     id: img
                     source: 'icons/play-button.png'

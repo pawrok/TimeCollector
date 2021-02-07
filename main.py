@@ -107,6 +107,16 @@ class TimeTracker(App):
         print(t, total_time)
         self.root.ids['box'].children[timer_index].ids['time'].text = t[0] + '.' + t[1][0:2]
 
+    def reset_tracker_time(self, timer_id):
+        timer_index = self.trackers_indices.get(timer_id)
+        tracker = self.root.ids['box'].children[timer_index]
+        tracker.current_duration = 0.001
+        tracker.total_duration = 0.001
+        zero_time = str(datetime.timedelta(seconds=0.001)).split('.')
+        tracker.ids['time'].text = zero_time[0] + '.' + zero_time[1][0:2]
+        if tracker.timer_on == 1:
+            self.stop_timer(timer_id)
+
     def load_trackers(self):
         for item in self.db:
             print(item)
@@ -129,7 +139,6 @@ if __name__ == '__main__':
     TimeTracker().run()
 
 # TODO: 
-#       reset button
 #       event saving statistics from a day to db (add and update)
 #       matplotlib creating plots and loading them to kivy
 #       better visuals
