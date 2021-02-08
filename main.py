@@ -37,6 +37,7 @@ class TimeTracker(App):
         Builder.load_file('root.kv')
         self.root = RootLayout()
         self.load_trackers()
+        self.reset_stats_at_new_day()
         return self.root
 
     def match_ids_to_indices(self):
@@ -128,11 +129,35 @@ class TimeTracker(App):
         self.stop_all_timers()
 
         q = Query()
+        trackers = self.root.ids['box'].children
 
-        for index in range(len(self.root.ids['box'].children)):
-            id = self.root.ids['box'].children[index].ID
-            total_time = self.root.ids['box'].children[index].total_duration
+        for index in range(len(trackers)):
+            id = trackers[index].ID
+            total_time = trackers[index].total_duration
             self.db.update({'total_time': total_time}, q.tracker_id == id)
+            self.save_day_data(id, total_time)
+
+    def save_day_data(self, tracker_id, time):
+        today = datetime.date.today().strftime("%d/%m/%y")
+        q = Query()
+        past_data = self.db.search(q.tracker_id == tracker_id)[0]['past_data']
+        past_data[today] = time
+        print(past_data)
+        self.db.upsert({'past_data': past_data}, q.tracker_id == tracker_id)
+
+    def reset_stats_at_new_day(self):
+        today = datetime.date.today().strftime("%d/%m/%y")
+        trackers = self.root.ids['box'].children
+        
+        for index in range(len(trackers)):
+            tracker_id = trackers[index].ID
+            past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
+            if today not in past_data:
+                self.reset_tracker_time(tracker_id)
+                print("tracker: ", tracker_id, "reseted.")
+        print("Reset done.")
+
+
 
 
 if __name__ == '__main__':
