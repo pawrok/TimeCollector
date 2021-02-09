@@ -128,22 +128,20 @@ class TimeTracker(App):
 
         self.stop_all_timers()
 
-        q = Query()
         trackers = self.root.ids['box'].children
 
         for index in range(len(trackers)):
             id = trackers[index].ID
             total_time = trackers[index].total_duration
-            self.db.update({'total_time': total_time}, q.tracker_id == id)
+            self.db.update({'total_time': total_time}, Query().tracker_id == id)
             self.save_day_data(id, total_time)
 
     def save_day_data(self, tracker_id, time):
         today = datetime.date.today().strftime("%d/%m/%y")
-        q = Query()
-        past_data = self.db.search(q.tracker_id == tracker_id)[0]['past_data']
+        past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
         past_data[today] = time
         print(past_data)
-        self.db.upsert({'past_data': past_data}, q.tracker_id == tracker_id)
+        self.db.upsert({'past_data': past_data}, Query().tracker_id == tracker_id)
 
     def reset_stats_at_new_day(self):
         today = datetime.date.today().strftime("%d/%m/%y")
@@ -157,13 +155,44 @@ class TimeTracker(App):
                 print("tracker: ", tracker_id, "reseted.")
         print("Reset done.")
 
+    def plot_past_data(self):
+        all_data = self.db.all()
+        # plt.xkcd()
 
+        ' linear, every tracker '
+        for item in all_data:
+            plot_date = []
+            plot_duration = []
+            for key, value in item['past_data'].items():
+                plot_date.append(key)
+                plot_duration.append(value)
+            plt.plot(plot_date, plot_duration)
+        plt.show()
+
+        ' pie '
+        labels = []
+        durations = []
+        for item in all_data:
+            labels.append(item['tracker_name'])
+            sum_h = 0
+            for key, value in item['past_data'].items():
+                sum_h += value
+            durations.append(sum_h)
+
+        def func(pct, allvals):
+            absolute = int(pct/100.*np.sum(allvals))
+            return "{:.1f}%\n({:d} h)".format(pct, absolute)
+        
+        fig1, ax1 = plt.subplots()
+        ax1.pie(durations, labels=labels, autopct=lambda pct: func(pct, durations),
+            startangle=90)
+        ax1.axis('equal')
+        plt.show()
 
 
 if __name__ == '__main__':
     TimeTracker().run()
 
 # TODO: 
-#       event saving statistics from a day to db (add and update)
-#       matplotlib creating plots and loading them to kivy
+#       matplotlib loading plots to kivy
 #       better visuals
