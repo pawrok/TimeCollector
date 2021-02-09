@@ -1,6 +1,8 @@
 import datetime
 from functools import partial
 from tinydb import TinyDB, Query
+import matplotlib.pyplot as plt
+import numpy as np
 
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -167,7 +169,8 @@ class TimeTracker(App):
                 plot_date.append(key)
                 plot_duration.append(value)
             plt.plot(plot_date, plot_duration)
-        plt.show()
+        # plt.show()
+        plt.savefig("linear.png")
 
         ' pie '
         labels = []
@@ -187,12 +190,12 @@ class TimeTracker(App):
         ax1.pie(durations, labels=labels, autopct=lambda pct: func(pct, durations),
             startangle=90)
         ax1.axis('equal')
-        plt.show()
+        # plt.show()
+        plt.savefig("pie.png")
 
 
 if __name__ == '__main__':
     TimeTracker().run()
 
 # TODO: 
-#       matplotlib loading plots to kivy
 #       better visuals
