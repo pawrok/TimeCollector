@@ -3,7 +3,8 @@ from functools import partial
 from tinydb import TinyDB, Query
 import matplotlib.pyplot as plt
 import numpy as np
-
+import matplotlib as mpl
+ 
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.app import App
@@ -15,7 +16,7 @@ from kivy.clock import Clock
 
 import kivy
 
-Config.set('graphics', 'width', '180')
+Config.set('graphics', 'width', '300')
 Config.set('graphics', 'height', '650')
 
 class RootLayout(BoxLayout):
@@ -31,8 +32,8 @@ class TrackerContainer(BoxLayout):
     
 class TimeTracker(App):
     def build(self):
-        self.title = 'Time Tracker'
-        # self.icon = 'myicon.png'
+        self.title = 'Time Collector'
+        self.icon = 'icons/hourglass.png'
         self.trackers_indices = {}
         self.db = TinyDB('db.json')
 
@@ -107,7 +108,6 @@ class TimeTracker(App):
         self.match_ids_to_indices()
         timer_index = self.trackers_indices.get(new_id)
         t = str(datetime.timedelta(seconds=total_time)).split('.')
-        print(t, total_time)
         self.root.ids['box'].children[timer_index].ids['time'].text = t[0] + '.' + t[1][0:2]
 
     def reset_tracker_time(self, timer_id):
@@ -122,7 +122,6 @@ class TimeTracker(App):
 
     def load_trackers(self):
         for item in self.db:
-            print(item)
             self.create_new_tracker(item['tracker_name'], item['tracker_id'], item['total_time'])
 
     def on_stop(self):
@@ -142,7 +141,6 @@ class TimeTracker(App):
         today = datetime.date.today().strftime("%d/%m/%y")
         past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
         past_data[today] = time
-        print(past_data)
         self.db.upsert({'past_data': past_data}, Query().tracker_id == tracker_id)
 
     def reset_stats_at_new_day(self):
@@ -154,22 +152,27 @@ class TimeTracker(App):
             past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
             if today not in past_data:
                 self.reset_tracker_time(tracker_id)
-                print("tracker: ", tracker_id, "reseted.")
-        print("Reset done.")
 
     def plot_past_data(self):
         all_data = self.db.all()
         # plt.xkcd()
+        mpl.rcParams.update({'font.size': 17})
+        plt.style.use('dark_background')
 
         ' linear, every tracker '
         for item in all_data:
             plot_date = []
             plot_duration = []
             for key, value in item['past_data'].items():
-                plot_date.append(key)
+                plot_date.append(key.split('/')[0])
                 plot_duration.append(value)
             plt.plot(plot_date, plot_duration)
-        # plt.show()
+
+        plt.title('Time spent each day', fontsize=22)
+        plt.xlabel('Day', fontsize=18)
+        plt.ylabel('Time (h)', fontsize=18)
+        plt.gcf().subplots_adjust(bottom=0.15)
+        plt.gcf().subplots_adjust(left=0.15)
         plt.savefig("linear.png")
 
         ' pie '
@@ -184,18 +187,48 @@ class TimeTracker(App):
 
         def func(pct, allvals):
             absolute = int(pct/100.*np.sum(allvals))
-            return "{:.1f}%\n({:d} h)".format(pct, absolute)
+            if pct < 3:
+                return ""
+            else:
+                return "{:.1f}%\n({:d} h)".format(pct, absolute)
         
         fig1, ax1 = plt.subplots()
-        ax1.pie(durations, labels=labels, autopct=lambda pct: func(pct, durations),
-            startangle=90)
-        ax1.axis('equal')
-        # plt.show()
-        plt.savefig("pie.png")
+        explode = len(all_data) * (0.05,)
+        patches, texts, autotexts = ax1.pie(durations, labels=labels,
+            autopct=lambda pct: func(pct, durations), startangle=90, pctdistance=0.72, explode=explode)
+        
+        
+        for text in texts:
+            text.set_color('white')
+            text.set_fontsize(12)
+
+        for autotext in autotexts:
+            autotext.set_color('black')
+            autotext.set_fontsize(12)
+
+        #draw circle
+        centre_circle = plt.Circle((0,0),0.5,fc='black')
+        fig = plt.gcf()
+        fig.gca().add_artist(centre_circle)
+
+        # ax1.axis('equal')
+        # plt.gca().set_axis_off()
+        # plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
+        #             hspace = 0, wspace = 0)
+        # plt.margins(0,0)
+        # plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        # plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        # plt.savefig("filename.pdf", bbox_inches = 'tight',
+        #     pad_inches = 0)
+        plt.title('Total time comparison', fontsize=18)
+        plt.savefig("pie.png", bbox_inches = 'tight',
+            pad_inches = 0)
 
 
 if __name__ == '__main__':
     TimeTracker().run()
 
 # TODO: 
+#       delete tracker btn
 #       better visuals
+#       shortcuts

@@ -2,73 +2,100 @@
 #:import Factory kivy.factory.Factory
 
 <RootLayout>:
-    box: box
-    orientation: 'vertical'
+    orientation: 'horizontal'
+
+    Label:
+        id: void_label
+
     BoxLayout:
-        size_hint_y: 0.1
-        Label:
-            text: "Time tracker"
-            size_hint_x: 0.7
+        box: box
+        orientation: 'vertical'
+        size_hint_x: None
+        width: 300
         BoxLayout:
-            size_hint_x: 0.3
-            padding: 15, 15
+            size_hint_y: 0.07
+            Label:
+                size_hint_x: 0.25
+            Label:
+                text: "TIME COLLECTOR"
+                font_name: 'Amatic.ttf'
+                # color: 240./255, 188./255, 110./255
+                font_size: '35sp'
+                size_hint_x: 0.5
+                # canvas:
+                #     Color:
+                #         rgb: 1, 0, 0
+                #     Rectangle:
+                #         pos: self.pos
+                #         size: self.size
+
+            BoxLayout:
+                size_hint_x: 0.25
+                padding: 18, 0
+                Button:
+                    size_hint: None, None
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    size: 22, 22
+                    id: menu_btn
+                    background_normal: ''
+                    background_color: 0, 0, 0, 1
+                    on_release: Factory.MenuPopup().open()
+                    Image:
+                        source: 'icons/menu.png'
+                        size: menu_btn.size
+                        pos: menu_btn.pos
+
+        ScrollView:
+            GridLayout:
+                id: box
+                cols: 1
+                size_hint_y: None
+                height: 0
+
+        BoxLayout:
+            size_hint_y: 0.08
+            padding: '5dp', '5dp'
+            TextInput:
+                size_hint_x: 0.75
+                padding: 0, 9
+                id: tracker_name_input
+                multiline: False
+                background_active: ''
+                background_color: 0, 0, 0, 1
+                background_disabled_normal: ''
+                background_normal: ''
+                font_size: 15
+                foreground_color: 1, 1, 1, 1
+                hint_text: 'Collector name...'
             Button:
-                id: menu_btn
+                id: add_btn
                 background_normal: ''
                 background_color: 0, 0, 0, 1
-                on_release: Factory.MenuPopup().open()
+                size_hint_x: 0.25
+                on_press: app.create_new_tracker(tracker_name_input.text)
                 Image:
-                    source: 'icons/menu.png'
-                    size: menu_btn.size
-                    pos: menu_btn.pos
+                    source: 'icons/plus.png'
+                    size: add_btn.size
+                    pos: add_btn.pos
 
-    ScrollView:
-        GridLayout:
-            id: box
-            cols: 1
-            size_hint_y: None
-            height: 0
-
-    BoxLayout:
-        size_hint_y: 0.1
-        padding: '5dp', '5dp'
-        TextInput:
-            size_hint_x: 0.75
-            padding: 0, 12
-            id: tracker_name_input
-            multiline: False
-            background_active: ''
-            background_color: 0, 0, 0, 1
-            background_disabled_normal: ''
-            background_normal: ''
-            font_size: 15
-            foreground_color: 1, 1, 1, 1
-            hint_text: 'Tracker name...'
-        Button:
-            id: add_btn
-            background_normal: ''
-            background_color: 0, 0, 0, 1
-            size_hint_x: 0.25
-            on_press: app.create_new_tracker(tracker_name_input.text)
-            Image:
-                source: 'icons/plus.png'
-                size: add_btn.size
-                pos: add_btn.pos
+    Label:
+        id: void_second_label
 
 
 <TrackerContainer>:
     img: img
-    height: 100
+    height: 120
     size_hint: 1, None
-    padding: '5dp', '5dp'
+    padding: '5dp', '12dp'
     BoxLayout:
         orientation: 'vertical'
         BoxLayout:
             size_hint_y: 0.5
             BoxLayout:
                 size_hint: 0.35, None
-                size: 40, 40
-                padding: 9, 12
+                size: 40, 45
+                padding: 5, 12
+                Label:
                 Button:
                     id: reset_button
                     background_normal: ''
@@ -92,19 +119,37 @@
                     pos: play_button.pos
             BoxLayout:
                 size_hint: 0.35, None
-                size: 40, 40
-                # padding: 12, 12
+                size: 40, 45
+                padding: 5, 12
                 Button:
-                    id: void_button
+                    id: settings_button
+                    # canvas:
+                    #     Color:
+                    #         rgb: 1, 0, 0
+                    #     Rectangle:
+                    #         pos: self.pos
+                    #         size: self.size
+
                     background_normal: ''
                     background_color: 0, 0, 0, 1
+                    # on_release: app.reset_tracker_time(root.ID)
+                    Image:
+                        id: r_img
+                        source: 'icons/settings.png'
+                        size: settings_button.size
+                        pos: settings_button.pos
+                Label:
+
 
         Label:
             id: time
-            size_hint_y: 0.25
+            size_hint_y: 0.27
             text: '0:00:00'
+            font_size:'20sp'
+            font_name: 'CONSOLA.ttf'
+            color: 110./255, 161./255, 240./255
         Label:
-            size_hint_y: 0.25
+            size_hint_y: 0.23
             text: root.name
 
 
@@ -114,13 +159,25 @@
     size_hint: None, None
     size: 180, 200
     pos_hint: {'top': 1}
+    separator_color: 110./255, 161./255, 240./255
+    # title_font: 'Amatic.ttf'
+    # title_size: 32
+    background: ''
+    background_color: 0, 0, 0, 1
+
     BoxLayout:
         orientation: 'vertical'
         Button:
+            background_normal: ''
+            background_color: 0, 0, 0, 1
+
             text: 'Truncate all trackers'
             on_release: app.db.truncate()
 
         Button:
+            background_normal: ''
+            background_color: 0, 0, 0, 1
+
             text: 'Create graphs'
             on_release:
                 root.dismiss(); \
@@ -128,21 +185,49 @@
                 Factory.PieGraph().open()
 
         Button:
+            background_normal: ''
+            background_color: 0, 0, 0, 1
+
             text: 'Close me!'
             on_release: root.dismiss()
 
 <PieGraph@Popup>:
-    title: 'Menu'
+    title: 'Graphs'
     pos_hint: {'top': 1}
+    separator_color: 110./255, 161./255, 240./255
+    # title_font: 'Amatic.ttf'
+    # title_size: 32
+    background_normal: ''
+    background_color: 0, 0, 0, 1
+
     BoxLayout:
+        canvas:
+            Color:
+                rgb: 0, 0, 0
+            Rectangle:
+                pos: self.pos
+                size: self.size
         orientation: 'vertical'
         Image:
-            size_hint_y: 0.4
+            size_hint_y: 0.45
             source: 'linear.png'
         Image:
-            size_hint_y: 0.4
+            size_hint_y: 0.45
             source: 'pie.png'
-        Button:
-            size_hint_y: 0.2
-            text: 'Close me!'
-            on_release: root.dismiss()
+        BoxLayout:
+            size_hint_y: 0.1
+            padding: 60, 10
+            Label:
+            Button:
+                id: close_btn
+                size_hint: None, None
+                pos_hint: {'center_x': .5, 'center_y': .5}
+                size: 22, 22
+                on_press: root.dismiss()
+                background_normal: ''
+                background_color: 0, 0, 0, 1
+                Image:
+                    source: 'icons/cancel.png'
+                    size: close_btn.size
+                    pos: close_btn.pos
+            Label:
