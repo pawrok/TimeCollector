@@ -1,2 +1,3 @@
-explode = 5*(0.05,)
-print(explode)
+import pandas as pd
+
+pd.read_json("db.json").to_excel("output.xlsx")

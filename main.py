@@ -4,31 +4,44 @@ from tinydb import TinyDB, Query
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
- 
+
+from kivy.config import Config
+Config.set('graphics', 'width', '300')
+Config.set('graphics', 'height', '650')
+
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, NumericProperty
-from kivy.config import Config
+from kivy.uix.popup import Popup
+from kivy.uix.dropdown import DropDown
+from kivy.properties import StringProperty, NumericProperty, DictProperty
 from kivy.clock import Clock
-
 import kivy
 
-Config.set('graphics', 'width', '300')
-Config.set('graphics', 'height', '650')
 
 class RootLayout(BoxLayout):
     pass
+
+class RenamePopup(Popup):
+    tr_id = NumericProperty(0)
+    def __init__(self, ID, **kwargs): 
+        super(RenamePopup, self).__init__(**kwargs)
+        self.tr_id = ID
 
 class TrackerContainer(BoxLayout):
     ID = NumericProperty(0)
     timer_on = NumericProperty(0)
     name = StringProperty('')
     timer_event = None
+
+    # time saved only in db needed to load tracker with last time
     total_duration = NumericProperty(0.001)
+    # current time based on current time and tracker start time diff
     current_duration = NumericProperty(0.001)
+    # time stored after refresh
+    refresh_time = NumericProperty(0.001)
     
 class TimeTracker(App):
     def build(self):
@@ -71,7 +84,7 @@ class TimeTracker(App):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
         tracker.timer_on = 0
-        tracker.ids['img'].source = 'icons/play-button.png'
+        tracker.ids['img'].source = 'icons/play.png'
         tracker.timer_event.cancel()
         tracker.total_duration += tracker.current_duration
 
@@ -113,12 +126,40 @@ class TimeTracker(App):
     def reset_tracker_time(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
+
         tracker.current_duration = 0.001
         tracker.total_duration = 0.001
+
         zero_time = str(datetime.timedelta(seconds=0.001)).split('.')
         tracker.ids['time'].text = zero_time[0] + '.' + zero_time[1][0:2]
+        
         if tracker.timer_on == 1:
             self.stop_timer(timer_id)
+
+    def save_tracker_time(self, timer_id):
+        # TODO
+        timer_index = self.trackers_indices.get(timer_id)
+        tracker = self.root.ids['box'].children[timer_index]
+
+        total_time = trackers[index].total_duration
+        self.db.update({'total_time': 0}, Query().tracker_id == id)
+        # self.save_day_data(id, total_time)
+        
+
+
+    def delete_tracker(self, timer_id):
+        timer_index = self.trackers_indices.get(timer_id)
+        tracker = self.root.ids['box'].children[timer_index]
+        self.root.ids['box'].remove_widget(tracker)
+        self.match_ids_to_indices()
+        self.root.ids['box'].height -= TrackerContainer.height.defaultvalue
+        self.db.remove(Query().tracker_id == timer_id)
+
+    def rename_tracker(self, timer_id, new_name):
+        timer_index = self.trackers_indices.get(timer_id)
+        tracker = self.root.ids['box'].children[timer_index]
+        tracker.name = new_name
+        self.db.update({'tracker_name': new_name}, Query().tracker_id == timer_id)
 
     def load_trackers(self):
         for item in self.db:
@@ -134,13 +175,14 @@ class TimeTracker(App):
         for index in range(len(trackers)):
             id = trackers[index].ID
             total_time = trackers[index].total_duration
+
             self.db.update({'total_time': total_time}, Query().tracker_id == id)
             self.save_day_data(id, total_time)
 
     def save_day_data(self, tracker_id, time):
         today = datetime.date.today().strftime("%d/%m/%y")
         past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
-        past_data[today] = time
+        past_data[today] += time
         self.db.upsert({'past_data': past_data}, Query().tracker_id == tracker_id)
 
     def reset_stats_at_new_day(self):
@@ -165,7 +207,7 @@ class TimeTracker(App):
             plot_duration = []
             for key, value in item['past_data'].items():
                 plot_date.append(key.split('/')[0])
-                plot_duration.append(value)
+                plot_duration.append(value/3600)
             plt.plot(plot_date, plot_duration)
 
         plt.title('Time spent each day', fontsize=22)
@@ -183,7 +225,7 @@ class TimeTracker(App):
             sum_h = 0
             for key, value in item['past_data'].items():
                 sum_h += value
-            durations.append(sum_h)
+            durations.append(sum_h/3600)
 
         def func(pct, allvals):
             absolute = int(pct/100.*np.sum(allvals))
@@ -206,20 +248,11 @@ class TimeTracker(App):
             autotext.set_color('black')
             autotext.set_fontsize(12)
 
-        #draw circle
+        # draw circle
         centre_circle = plt.Circle((0,0),0.5,fc='black')
         fig = plt.gcf()
         fig.gca().add_artist(centre_circle)
 
-        # ax1.axis('equal')
-        # plt.gca().set_axis_off()
-        # plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
-        #             hspace = 0, wspace = 0)
-        # plt.margins(0,0)
-        # plt.gca().xaxis.set_major_locator(plt.NullLocator())
-        # plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        # plt.savefig("filename.pdf", bbox_inches = 'tight',
-        #     pad_inches = 0)
         plt.title('Total time comparison', fontsize=18)
         plt.savefig("pie.png", bbox_inches = 'tight',
             pad_inches = 0)
@@ -229,6 +262,6 @@ if __name__ == '__main__':
     TimeTracker().run()
 
 # TODO: 
-#       delete tracker btn
-#       better visuals
-#       shortcuts
+#       (export to excel)
+#       (smaller miliseconds)
+#       (shortcuts)

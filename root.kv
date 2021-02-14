@@ -54,9 +54,11 @@
 
         BoxLayout:
             size_hint_y: 0.08
-            padding: '5dp', '5dp'
+            padding: 5, 5
+            Label:
+                size_hint_x: 0.1
             TextInput:
-                size_hint_x: 0.75
+                size_hint_x: 0.8
                 padding: 0, 9
                 id: tracker_name_input
                 multiline: False
@@ -71,12 +73,14 @@
                 id: add_btn
                 background_normal: ''
                 background_color: 0, 0, 0, 1
-                size_hint_x: 0.25
+                size_hint_x: 0.10
                 on_press: app.create_new_tracker(tracker_name_input.text)
                 Image:
-                    source: 'icons/plus.png'
+                    source: 'icons/add2.png'
                     size: add_btn.size
                     pos: add_btn.pos
+            Label:
+                size_hint_x: 0.1
 
     Label:
         id: void_second_label
@@ -95,7 +99,9 @@
                 size_hint: 0.35, None
                 size: 40, 45
                 padding: 5, 12
+
                 Label:
+
                 Button:
                     id: reset_button
                     background_normal: ''
@@ -106,6 +112,7 @@
                         source: 'icons/refresh.png'
                         size: reset_button.size
                         pos: reset_button.pos
+
             Button:
                 id: play_button
                 background_normal: ''
@@ -114,32 +121,64 @@
                 on_press: app.start_stop_timer(root.ID)
                 Image:
                     id: img
-                    source: 'icons/play-button.png'
+                    source: 'icons/play.png'
                     size: play_button.size
                     pos: play_button.pos
+
             BoxLayout:
                 size_hint: 0.35, None
                 size: 40, 45
-                padding: 5, 12
-                Button:
-                    id: settings_button
-                    # canvas:
-                    #     Color:
-                    #         rgb: 1, 0, 0
-                    #     Rectangle:
-                    #         pos: self.pos
-                    #         size: self.size
+                padding: 15, 12
+                BoxLayout:
+                    name: 'DropDown'
+                    __safe_id: [dropdown.__self__]
+                    Button:
+                        id: st_btn
+                        background_normal: ''
+                        background_color: 0, 0, 0, 1
+                        on_release: dropdown.open(self)
+                        Image:
+                            id: r_img
+                            source: 'icons/settings.png'
+                            size: st_btn.size
+                            pos: st_btn.pos
 
-                    background_normal: ''
-                    background_color: 0, 0, 0, 1
-                    # on_release: app.reset_tracker_time(root.ID)
-                    Image:
-                        id: r_img
-                        source: 'icons/settings.png'
-                        size: settings_button.size
-                        pos: settings_button.pos
+                    Widget:
+                        on_parent: dropdown.dismiss()
+
+                    DropDown:
+                        id: dropdown
+
+                        Button:
+                            id: xx
+                            size_hint_y: None
+                            height: 31
+                            # width: 40
+                            background_normal: ''
+                            background_color: 0, 0, 0, 1
+                            on_release:
+                                Factory.RenamePopup(root.ID).open(); \
+                                dropdown.dismiss()
+                            Image:
+                                source: 'icons/edit2.png'
+                                size: xx.size
+                                pos: xx.pos
+
+                        Button:
+                            id: del_btn
+                            size_hint_y: None
+                            height: 31
+                            background_normal: ''
+                            background_color: 0, 0, 0, 1
+                            on_release:
+                                app.delete_tracker(root.ID); \
+                                dropdown.dismiss()
+                            Image:
+                                source: 'icons/delete2.png'
+                                size: del_btn.size
+                                pos: del_btn.pos
+
                 Label:
-
 
         Label:
             id: time
@@ -152,9 +191,8 @@
             size_hint_y: 0.23
             text: root.name
 
-
 <MenuPopup@Popup>:
-    auto_dismiss: False
+    auto_dismiss: True
     title: 'Menu'
     size_hint: None, None
     size: 180, 200
@@ -222,7 +260,7 @@
                 id: close_btn
                 size_hint: None, None
                 pos_hint: {'center_x': .5, 'center_y': .5}
-                size: 22, 22
+                size: 33, 33
                 on_press: root.dismiss()
                 background_normal: ''
                 background_color: 0, 0, 0, 1
@@ -231,3 +269,44 @@
                     size: close_btn.size
                     pos: close_btn.pos
             Label:
+
+<RenamePopup>:
+    auto_dismiss: True
+    title: 'Rename'
+    size_hint: None, None
+    size: 180, 200
+    pos_hint: {'top': 1}
+    separator_color: 110./255, 161./255, 240./255
+    # title_font: 'Amatic.ttf'
+    # title_size: 32
+    background: ''
+    background_color: 0, 0, 0, 1
+
+    BoxLayout:
+        orientation: 'vertical'
+        TextInput:
+            id: name_input
+            multiline: False
+            background_active: ''
+            background_color: 0, 0, 0, 1
+            background_disabled_normal: ''
+            background_normal: ''
+            font_size: 15
+            foreground_color: 1, 1, 1, 1
+            hint_text: 'New collector name...'
+        BoxLayout:
+            Button:
+                background_normal: ''
+                background_color: 0, 0, 0, 1
+
+                text: 'Apply'
+                on_release:
+                    app.rename_tracker(root.tr_id, name_input.text); \
+                    root.dismiss()
+
+            Button:
+                background_normal: ''
+                background_color: 0, 0, 0, 1
+
+                text: 'Cancel'
+                on_release: root.dismiss()
