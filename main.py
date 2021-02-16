@@ -88,6 +88,7 @@ class TimeTracker(App):
         tracker.ids['img'].source = 'icons/play.png'
         tracker.timer_event.cancel()
         tracker.total_duration += tracker.current_duration
+        tracker.refresh_time += tracker.current_duration
 
     def stop_all_timers(self):
         for id, index in self.trackers_indices.items():
@@ -101,22 +102,23 @@ class TimeTracker(App):
         diff = datetime.datetime.now() - start_time
         tracker.current_duration = diff.total_seconds()
         
-        total = tracker.current_duration + tracker.total_duration
+        total = tracker.current_duration + tracker.refresh_time
         t = str(datetime.timedelta(seconds=total)).split('.')
         tracker.ids['time'].text = t[0] + '.' + t[1][0:2]
 
-    def create_new_tracker(self, new_name, id=-1, total_time=0.001):
+    def create_new_tracker(self, new_name, id=-1, total_time=0.001, refresh_time=0.001):
         if id == -1:
             if self.db.all():
                 max_id = sorted(self.db.all(), key=lambda k: k['tracker_id'])[-1]['tracker_id']
             else:
                 max_id = -1
             new_id = max_id + 1
-            self.db.insert({'tracker_name': new_name, 'tracker_id': new_id, 'total_time': total_time, 'past_data': {} })
+            self.db.insert({'tracker_name': new_name, 'tracker_id': new_id, 'total_time': total_time, 'refresh_time': refresh_time, 'past_data': {} })
         else:
             new_id = id
 
-        self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name, total_duration=total_time))
+        self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name, total_duration=total_time,
+            refresh_time=refresh_time))
         self.root.ids['box'].height += TrackerContainer.height.defaultvalue
 
         self.match_ids_to_indices()
@@ -124,12 +126,11 @@ class TimeTracker(App):
         t = str(datetime.timedelta(seconds=total_time)).split('.')
         self.root.ids['box'].children[timer_index].ids['time'].text = t[0] + '.' + t[1][0:2]
 
-    def reset_tracker_time(self, timer_id):
+    def refresh_tracker_time(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
 
-        tracker.current_duration = 0.001
-        tracker.total_duration = 0.001
+        tracker.refresh_time = 0.001
 
         zero_time = str(datetime.timedelta(seconds=0.001)).split('.')
         tracker.ids['time'].text = zero_time[0] + '.' + zero_time[1][0:2]
@@ -166,7 +167,7 @@ class TimeTracker(App):
 
     def load_trackers(self):
         for item in self.db:
-            self.create_new_tracker(item['tracker_name'], item['tracker_id'], item['total_time'])
+            self.create_new_tracker(item['tracker_name'], item['tracker_id'], item['total_time'], item['refresh_time'])
 
     def on_stop(self):
         " saves all timer's time when exiting the app "
@@ -178,8 +179,9 @@ class TimeTracker(App):
         for index in range(len(trackers)):
             id = trackers[index].ID
             total_time = trackers[index].total_duration
+            refresh_time = trackers[index].refresh_time
 
-            self.db.update({'total_time': total_time}, Query().tracker_id == id)
+            self.db.update({'total_time': total_time, 'refresh_time': refresh_time}, Query().tracker_id == id)
             self.save_day_data(id, total_time)
 
     def save_day_data(self, tracker_id, time):
@@ -196,7 +198,7 @@ class TimeTracker(App):
             tracker_id = trackers[index].ID
             past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
             if today not in past_data:
-                self.reset_tracker_time(tracker_id)
+                self.refresh_tracker_time(tracker_id)
 
     def plot_past_data(self):
         all_data = self.db.all()
