@@ -57,6 +57,7 @@ class TimeTracker(App):
         return self.root
 
     def match_ids_to_indices(self):
+        self.trackers_indices = {}
         for index in range(len(self.root.ids['box'].children)):
             id = self.root.ids['box'].children[index].ID
             self.trackers_indices[id] = index
@@ -150,6 +151,8 @@ class TimeTracker(App):
     def delete_tracker(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
+        if tracker.timer_on == 1:
+            self.stop_timer(timer_id)
         self.root.ids['box'].remove_widget(tracker)
         self.match_ids_to_indices()
         self.root.ids['box'].height -= TrackerContainer.height.defaultvalue
