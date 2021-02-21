@@ -2,7 +2,6 @@ import datetime
 from functools import partial
 from tinydb import TinyDB, Query
 import matplotlib.pyplot as plt
-import numpy as np
 import matplotlib as mpl
 
 from kivy.config import Config
@@ -138,17 +137,6 @@ class TimeTracker(App):
         if tracker.timer_on == 1:
             self.stop_timer(timer_id)
 
-    def save_tracker_time(self, timer_id):
-        # TODO
-        timer_index = self.trackers_indices.get(timer_id)
-        tracker = self.root.ids['box'].children[timer_index]
-
-        total_time = trackers[index].total_duration
-        self.db.update({'total_time': 0}, Query().tracker_id == id)
-        # self.save_day_data(id, total_time)
-        
-
-
     def delete_tracker(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
@@ -187,6 +175,8 @@ class TimeTracker(App):
     def save_day_data(self, tracker_id, time):
         today = datetime.date.today().strftime("%d/%m/%y")
         past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
+        if past_data == {}:
+            past_data[today] = 0
         past_data[today] += time
         self.db.upsert({'past_data': past_data}, Query().tracker_id == tracker_id)
 
@@ -233,7 +223,7 @@ class TimeTracker(App):
             durations.append(sum_h/3600)
 
         def func(pct, allvals):
-            absolute = int(pct/100.*np.sum(allvals))
+            absolute = int(pct/100.*sum(allvals))
             if pct < 3:
                 return ""
             else:
