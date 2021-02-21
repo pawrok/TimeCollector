@@ -118,7 +118,7 @@ class TimeTracker(App):
 
         self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name, total_duration=total_time,
             refresh_time=refresh_time))
-        self.root.ids['box'].height += TrackerContainer.height.defaultvalue
+        self.root.ids['box'].height += TrackerContainer.height.defaultvalue * 1.2   # 1.2 == padding
 
         self.match_ids_to_indices()
         timer_index = self.trackers_indices.get(new_id)
