@@ -57,11 +57,12 @@
             padding: 5, 5
             Label:
                 size_hint_x: 0.1
-            TextInput:
+            CollectorTextInput:
                 size_hint_x: 0.8
                 padding: 0, 9
                 id: tracker_name_input
                 multiline: False
+                focus: True
                 background_active: ''
                 background_color: 0, 0, 0, 1
                 background_disabled_normal: ''
@@ -69,6 +70,7 @@
                 font_size: 15
                 foreground_color: 1, 1, 1, 1
                 hint_text: 'Collector name...'
+                text: ''
             Button:
                 id: add_btn
                 background_normal: ''
@@ -208,26 +210,11 @@
         Button:
             background_normal: ''
             background_color: 0, 0, 0, 1
-
-            text: 'Truncate all trackers'
-            on_release: app.db.truncate()
-
-        Button:
-            background_normal: ''
-            background_color: 0, 0, 0, 1
-
             text: 'Create graphs'
             on_release:
                 root.dismiss(); \
                 app.plot_past_data(); \
                 Factory.PieGraph().open()
-
-        Button:
-            background_normal: ''
-            background_color: 0, 0, 0, 1
-
-            text: 'Close me!'
-            on_release: root.dismiss()
 
 <PieGraph@Popup>:
     title: 'Graphs'
@@ -273,6 +260,7 @@
 <RenamePopup>:
     auto_dismiss: True
     title: 'Rename'
+    rename_input: rename_input
     size_hint: None, None
     size: 180, 200
     pos_hint: {'top': 1}
@@ -285,8 +273,10 @@
     BoxLayout:
         orientation: 'vertical'
         TextInput:
-            id: name_input
+            id: rename_input
+            write_tab: False
             multiline: False
+            focus: True
             background_active: ''
             background_color: 0, 0, 0, 1
             background_disabled_normal: ''
@@ -301,7 +291,7 @@
 
                 text: 'Apply'
                 on_release:
-                    app.rename_tracker(root.tr_id, name_input.text); \
+                    app.rename_tracker(root.tr_id, rename_input.text); \
                     root.dismiss()
 
             Button:

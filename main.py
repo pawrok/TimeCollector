@@ -10,24 +10,46 @@ Config.set('graphics', 'height', '650')
 
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.app import App
-from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.dropdown import DropDown
+from kivy.app import App
+from kivy.lang import Builder
 from kivy.properties import StringProperty, NumericProperty, DictProperty
 from kivy.clock import Clock
+from kivy.core.window import Window
+
 import kivy
 
 
 class RootLayout(BoxLayout):
     pass
 
+class CollectorTextInput(TextInput):
+    def __init__(self, **kwargs):
+        super(CollectorTextInput, self).__init__(**kwargs)
+        Window.bind(on_key_down=self._on_keyboard_down)
+        Clock.schedule_once(self.collector_focus, 1)
+
+    def collector_focus(self, *args):
+        self.focus = True
+
+    def _on_keyboard_down(self, instance, keyboard, keycode, text, modifiers):
+        if self.focus and keycode == 40:  # Enter
+            App.get_running_app().create_new_tracker(self.text)
+
 class RenamePopup(Popup):
     tr_id = NumericProperty(0)
     def __init__(self, ID, **kwargs): 
         super(RenamePopup, self).__init__(**kwargs)
         self.tr_id = ID
+        Window.bind(on_key_down=self._on_keyboard_down)
+
+    def _on_keyboard_down(self, instance, keyboard, keycode, text, modifiers):
+        if self.rename_input.focus and keycode == 40:  # Enter
+            App.get_running_app().rename_tracker(self.tr_id, self.rename_input.text)
+            self.dismiss()
 
 class TrackerContainer(BoxLayout):
     ID = NumericProperty(0)
@@ -175,7 +197,7 @@ class TimeTracker(App):
     def save_day_data(self, tracker_id, time):
         today = datetime.date.today().strftime("%d/%m/%y")
         past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
-        if past_data == {}:
+        if today not in past_data:
             past_data[today] = 0
         past_data[today] += time
         self.db.upsert({'past_data': past_data}, Query().tracker_id == tracker_id)
@@ -259,4 +281,7 @@ if __name__ == '__main__':
 # TODO: 
 #       (export to excel)
 #       (smaller miliseconds)
-#       (shortcuts)
+#       (hotkeys)
+#       different background colors
+#       button to turn multi trackers
+#       funny theme
