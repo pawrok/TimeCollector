@@ -12,26 +12,23 @@
         orientation: 'vertical'
         size_hint_x: None
         width: 300
+
         BoxLayout:
             size_hint_y: 0.07
+
             Label:
                 size_hint_x: 0.25
+
             Label:
                 text: "TIME COLLECTOR"
                 font_name: 'fonts/Amatic.ttf'
-                # color: 240./255, 188./255, 110./255
                 font_size: '35sp'
                 size_hint_x: 0.5
-                # canvas:
-                #     Color:
-                #         rgb: 1, 0, 0
-                #     Rectangle:
-                #         pos: self.pos
-                #         size: self.size
 
             BoxLayout:
                 size_hint_x: 0.25
                 padding: 18, 0
+
                 Button:
                     size_hint: None, None
                     pos_hint: {'center_x': .5, 'center_y': .5}
@@ -40,12 +37,14 @@
                     background_normal: ''
                     background_color: 0, 0, 0, 1
                     on_release: Factory.MenuPopup().open()
+
                     Image:
                         source: 'icons/menu.png'
                         size: menu_btn.size
                         pos: menu_btn.pos
 
         ScrollView:
+
             GridLayout:
                 id: box
                 cols: 1
@@ -55,8 +54,10 @@
         BoxLayout:
             size_hint_y: 0.08
             padding: 5, 5
+
             Label:
                 size_hint_x: 0.1
+
             CollectorTextInput:
                 size_hint_x: 0.8
                 padding: 0, 9
@@ -71,16 +72,19 @@
                 foreground_color: 1, 1, 1, 1
                 hint_text: 'Collector name...'
                 text: ''
+
             Button:
                 id: add_btn
                 background_normal: ''
                 background_color: 0, 0, 0, 1
                 size_hint_x: 0.10
                 on_press: app.create_new_tracker(tracker_name_input.text)
+
                 Image:
                     source: 'icons/add2.png'
                     size: add_btn.size
                     pos: add_btn.pos
+
             Label:
                 size_hint_x: 0.1
 
@@ -93,10 +97,13 @@
     height: 120
     size_hint: 1, None
     padding: '5dp', '12dp'
+
     BoxLayout:
         orientation: 'vertical'
+
         BoxLayout:
             size_hint_y: 0.5
+
             BoxLayout:
                 size_hint: 0.35, None
                 size: 40, 45
@@ -109,6 +116,7 @@
                     background_normal: ''
                     background_color: 0, 0, 0, 1
                     on_release: app.refresh_tracker_time(root.ID)
+
                     Image:
                         id: r_img
                         source: 'icons/refresh.png'
@@ -121,6 +129,7 @@
                 size_hint_x: 0.3
                 background_color: 0, 0, 0, 1
                 on_press: app.start_stop_timer(root.ID)
+
                 Image:
                     id: img
                     source: 'icons/play.png'
@@ -131,14 +140,17 @@
                 size_hint: 0.35, None
                 size: 40, 45
                 padding: 15, 12
+
                 BoxLayout:
                     name: 'DropDown'
                     __safe_id: [dropdown.__self__]
+
                     Button:
                         id: st_btn
                         background_normal: ''
                         background_color: 0, 0, 0, 1
                         on_release: dropdown.open(self)
+
                         Image:
                             id: r_img
                             source: 'icons/settings.png'
@@ -161,6 +173,7 @@
                             on_release:
                                 Factory.RenamePopup(root.ID).open(); \
                                 dropdown.dismiss()
+
                             Image:
                                 source: 'icons/edit2.png'
                                 size: xx.size
@@ -175,6 +188,7 @@
                             on_release:
                                 app.delete_tracker(root.ID); \
                                 dropdown.dismiss()
+
                             Image:
                                 source: 'icons/delete2.png'
                                 size: del_btn.size
@@ -189,6 +203,7 @@
             font_size:'20sp'
             font_name: 'fonts/CONSOLA.ttf'
             color: 110./255, 161./255, 240./255
+
         Label:
             size_hint_y: 0.23
             text: root.name
@@ -207,6 +222,7 @@
 
     BoxLayout:
         orientation: 'vertical'
+
         Button:
             background_normal: ''
             background_color: 0, 0, 0, 1
@@ -233,16 +249,21 @@
                 pos: self.pos
                 size: self.size
         orientation: 'vertical'
+
         Image:
             size_hint_y: 0.45
             source: 'linear.png'
+
         Image:
             size_hint_y: 0.45
             source: 'pie.png'
+
         BoxLayout:
             size_hint_y: 0.1
             padding: 60, 10
+
             Label:
+
             Button:
                 id: close_btn
                 size_hint: None, None
@@ -251,10 +272,12 @@
                 on_press: root.dismiss()
                 background_normal: ''
                 background_color: 0, 0, 0, 1
+
                 Image:
                     source: 'icons/cancel.png'
                     size: close_btn.size
                     pos: close_btn.pos
+
             Label:
 
 <RenamePopup>:
@@ -272,6 +295,7 @@
 
     BoxLayout:
         orientation: 'vertical'
+
         TextInput:
             id: rename_input
             write_tab: False
@@ -284,7 +308,9 @@
             font_size: 15
             foreground_color: 1, 1, 1, 1
             hint_text: 'New collector name...'
+
         BoxLayout:
+
             Button:
                 background_normal: ''
                 background_color: 0, 0, 0, 1
