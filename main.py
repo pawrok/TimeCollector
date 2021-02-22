@@ -26,6 +26,7 @@ import kivy
 class RootLayout(BoxLayout):
     pass
 
+
 class CollectorTextInput(TextInput):
     def __init__(self, **kwargs):
         super(CollectorTextInput, self).__init__(**kwargs)
@@ -39,17 +40,21 @@ class CollectorTextInput(TextInput):
         if self.focus and keycode == 40:  # Enter
             App.get_running_app().create_new_tracker(self.text)
 
+
 class RenamePopup(Popup):
     tr_id = NumericProperty(0)
-    def __init__(self, ID, **kwargs): 
+
+    def __init__(self, ID, **kwargs):
         super(RenamePopup, self).__init__(**kwargs)
         self.tr_id = ID
         Window.bind(on_key_down=self._on_keyboard_down)
 
     def _on_keyboard_down(self, instance, keyboard, keycode, text, modifiers):
         if self.rename_input.focus and keycode == 40:  # Enter
-            App.get_running_app().rename_tracker(self.tr_id, self.rename_input.text)
+            App.get_running_app().rename_tracker(self.tr_id,
+                                                 self.rename_input.text)
             self.dismiss()
+
 
 class TrackerContainer(BoxLayout):
     ID = NumericProperty(0)
@@ -63,7 +68,8 @@ class TrackerContainer(BoxLayout):
     current_duration = NumericProperty(0.001)
     # time stored after refresh
     refresh_time = NumericProperty(0.001)
-    
+
+
 class TimeTracker(App):
     def build(self):
         self.title = 'Time Collector'
@@ -86,11 +92,14 @@ class TimeTracker(App):
     def start_timer(self, timer_id):
         self.stop_all_timers()
         now = datetime.datetime.now()
-        event = Clock.schedule_interval(partial(self.update_label, start_time=now, timer_id=timer_id), 0.06)
+        event = Clock.schedule_interval(
+            partial(self.update_label, start_time=now, timer_id=timer_id),
+            0.06)
 
         timer_index = self.trackers_indices.get(timer_id)
         self.root.ids['box'].children[timer_index].timer_on = 1
-        self.root.ids['box'].children[timer_index].ids['img'].source = 'icons/pause.png'
+        self.root.ids['box'].children[timer_index].ids['img'].source \
+            = 'icons/pause.png'
 
         return event
 
@@ -122,30 +131,40 @@ class TimeTracker(App):
 
         diff = datetime.datetime.now() - start_time
         tracker.current_duration = diff.total_seconds()
-        
+
         total = tracker.current_duration + tracker.refresh_time
         t = str(datetime.timedelta(seconds=total)).split('.')
         tracker.ids['time'].text = t[0] + '.' + t[1][0:2]
 
-    def create_new_tracker(self, new_name, id=-1, total_time=0.001, refresh_time=0.001):
+    def create_new_tracker(
+            self, new_name, id=-1, total_time=0.001, refresh_time=0.001):
         if id == -1:
             if self.db.all():
-                max_id = sorted(self.db.all(), key=lambda k: k['tracker_id'])[-1]['tracker_id']
+                max_id = sorted(self.db.all(), key=lambda k: k['tracker_id'])
+                max_id = max_id[-1]['tracker_id']
             else:
                 max_id = -1
             new_id = max_id + 1
-            self.db.insert({'tracker_name': new_name, 'tracker_id': new_id, 'total_time': total_time, 'refresh_time': refresh_time, 'past_data': {} })
+            self.db.insert({
+                    'tracker_name': new_name, 'tracker_id': new_id,
+                    'total_time': total_time, 'refresh_time': refresh_time,
+                    'past_data': {}
+                })
         else:
             new_id = id
 
-        self.root.ids['box'].add_widget(TrackerContainer(ID=new_id, name=new_name, total_duration=total_time,
-            refresh_time=refresh_time))
-        self.root.ids['box'].height += TrackerContainer.height.defaultvalue * 1.2   # 1.2 == padding
+        self.root.ids['box'].add_widget(
+            TrackerContainer(ID=new_id, name=new_name,
+                             total_duration=total_time,
+                             refresh_time=refresh_time))
+        self.root.ids['box'].height += \
+            TrackerContainer.height.defaultvalue * 1.2   # 1.2 == padding
 
         self.match_ids_to_indices()
         timer_index = self.trackers_indices.get(new_id)
         t = str(datetime.timedelta(seconds=total_time)).split('.')
-        self.root.ids['box'].children[timer_index].ids['time'].text = t[0] + '.' + t[1][0:2]
+        self.root.ids['box'].children[timer_index].ids['time'].text \
+            = t[0] + '.' + t[1][0:2]
 
     def refresh_tracker_time(self, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
@@ -155,7 +174,7 @@ class TimeTracker(App):
 
         zero_time = str(datetime.timedelta(seconds=0.001)).split('.')
         tracker.ids['time'].text = zero_time[0] + '.' + zero_time[1][0:2]
-        
+
         if tracker.timer_on == 1:
             self.stop_timer(timer_id)
 
@@ -173,11 +192,14 @@ class TimeTracker(App):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
         tracker.name = new_name
-        self.db.update({'tracker_name': new_name}, Query().tracker_id == timer_id)
+        self.db.update(
+            {'tracker_name': new_name}, Query().tracker_id == timer_id)
 
     def load_trackers(self):
         for item in self.db:
-            self.create_new_tracker(item['tracker_name'], item['tracker_id'], item['total_time'], item['refresh_time'])
+            self.create_new_tracker(
+                item['tracker_name'], item['tracker_id'],
+                item['total_time'], item['refresh_time'])
 
     def on_stop(self):
         " saves all timer's time when exiting the app "
@@ -191,24 +213,38 @@ class TimeTracker(App):
             total_time = trackers[index].total_duration
             refresh_time = trackers[index].refresh_time
 
-            self.db.update({'total_time': total_time, 'refresh_time': refresh_time}, Query().tracker_id == id)
+            self.db.update(
+                {'total_time': total_time, 'refresh_time': refresh_time},
+                Query().tracker_id == id)
+
             self.save_day_data(id, total_time)
 
     def save_day_data(self, tracker_id, time):
         today = datetime.date.today().strftime("%d/%m/%y")
-        past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
+
+        past_data = self.db.search(
+            Query().tracker_id == tracker_id)
+        past_data = past_data[0]['past_data']
+
         if today not in past_data:
             past_data[today] = 0
+
         past_data[today] += time
-        self.db.upsert({'past_data': past_data}, Query().tracker_id == tracker_id)
+
+        self.db.upsert(
+            {'past_data': past_data}, Query().tracker_id == tracker_id)
 
     def reset_stats_at_new_day(self):
         today = datetime.date.today().strftime("%d/%m/%y")
         trackers = self.root.ids['box'].children
-        
+
         for index in range(len(trackers)):
             tracker_id = trackers[index].ID
-            past_data = self.db.search(Query().tracker_id == tracker_id)[0]['past_data']
+
+            past_data = self.db.search(
+                Query().tracker_id == tracker_id)
+            past_data = past_data[0]['past_data']
+
             if today not in past_data:
                 self.refresh_tracker_time(tracker_id)
 
@@ -250,13 +286,13 @@ class TimeTracker(App):
                 return ""
             else:
                 return "{:.1f}%\n({:d} h)".format(pct, absolute)
-        
+
         fig1, ax1 = plt.subplots()
         explode = len(all_data) * (0.05,)
-        patches, texts, autotexts = ax1.pie(durations, labels=labels,
-            autopct=lambda pct: func(pct, durations), startangle=90, pctdistance=0.72, explode=explode)
-        
-        
+        patches, texts, autotexts = ax1.pie(
+            durations, labels=labels, autopct=lambda pct: func(pct, durations),
+            startangle=90, pctdistance=0.72, explode=explode)
+
         for text in texts:
             text.set_color('white')
             text.set_fontsize(12)
@@ -266,22 +302,20 @@ class TimeTracker(App):
             autotext.set_fontsize(12)
 
         # draw circle
-        centre_circle = plt.Circle((0,0),0.5,fc='black')
+        centre_circle = plt.Circle((0, 0), 0.5, fc='black')
         fig = plt.gcf()
         fig.gca().add_artist(centre_circle)
 
         plt.title('Total time comparison', fontsize=18)
-        plt.savefig("pie.png", bbox_inches = 'tight',
-            pad_inches = 0)
+        plt.savefig("pie.png", bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':
     TimeTracker().run()
 
-# TODO: 
+# TODO:
 #       (export to excel)
 #       (smaller miliseconds)
-#       (hotkeys)
 #       different background colors
 #       button to turn multi trackers
 #       funny theme
