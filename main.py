@@ -320,10 +320,11 @@ class TimeTracker(App):
     def export_to_excel(self):
         wb = Workbook()
         data = self.db.all()
-        ws = wb.active
+        ws = wb.active      # get worksheet
 
         for col in range(1, len(data) + 1):
-            ws.cell(column=col * 2 - 1, row=1, value=data[col - 1]['tracker_name'])
+            ws.cell(column=col * 2 - 1, row=1,
+                    value=data[col - 1]['tracker_name'])
             ws.cell(column=col * 2 - 1, row=2, value='date')
             ws.cell(column=col * 2, row=2, value='time (s)')
             
