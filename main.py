@@ -1,8 +1,8 @@
-import datetime
+from datetime import datetime, timedelta, date
 from functools import partial
 from tinydb import TinyDB, Query
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 from kivy.config import Config
 Config.set('graphics', 'width', '300')
@@ -20,8 +20,9 @@ from kivy.properties import StringProperty, NumericProperty, DictProperty
 from kivy.clock import Clock
 from kivy.core.window import Window
 
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 import kivy
-
 
 class RootLayout(BoxLayout):
     pass
@@ -62,11 +63,11 @@ class TrackerContainer(BoxLayout):
     name = StringProperty('')
     timer_event = None
 
-    # time saved only in db needed to load tracker with last time
+    # time saved in db needed to load tracker with last time
     total_duration = NumericProperty(0.001)
     # current time based on current time and tracker start time diff
     current_duration = NumericProperty(0.001)
-    # time stored after refresh
+    # time stored after refresh, used to draw time label
     refresh_time = NumericProperty(0.001)
 
 
@@ -91,7 +92,7 @@ class TimeTracker(App):
 
     def start_timer(self, timer_id):
         self.stop_all_timers()
-        now = datetime.datetime.now()
+        now = datetime.now()
         event = Clock.schedule_interval(
             partial(self.update_label, start_time=now, timer_id=timer_id),
             0.06)
@@ -129,11 +130,11 @@ class TimeTracker(App):
         timer_index = self.trackers_indices.get(timer_id)
         tracker = self.root.ids['box'].children[timer_index]
 
-        diff = datetime.datetime.now() - start_time
+        diff = datetime.now() - start_time
         tracker.current_duration = diff.total_seconds()
 
         total = tracker.current_duration + tracker.refresh_time
-        t = str(datetime.timedelta(seconds=total)).split('.')
+        t = str(timedelta(seconds=total)).split('.')
         tracker.ids['time'].text = t[0] + '.' + t[1][0:2]
 
     def create_new_tracker(
@@ -162,7 +163,7 @@ class TimeTracker(App):
 
         self.match_ids_to_indices()
         timer_index = self.trackers_indices.get(new_id)
-        t = str(datetime.timedelta(seconds=total_time)).split('.')
+        t = str(timedelta(seconds=total_time)).split('.')
         self.root.ids['box'].children[timer_index].ids['time'].text \
             = t[0] + '.' + t[1][0:2]
 
@@ -172,7 +173,7 @@ class TimeTracker(App):
 
         tracker.refresh_time = 0.001
 
-        zero_time = str(datetime.timedelta(seconds=0.001)).split('.')
+        zero_time = str(timedelta(seconds=0.001)).split('.')
         tracker.ids['time'].text = zero_time[0] + '.' + zero_time[1][0:2]
 
         if tracker.timer_on == 1:
@@ -218,9 +219,11 @@ class TimeTracker(App):
                 Query().tracker_id == id)
 
             self.save_day_data(id, total_time)
+            trackers[index].total_duration = 0.001
+            trackers[index].refresh_time = 0.001
 
     def save_day_data(self, tracker_id, time):
-        today = datetime.date.today().strftime("%d/%m/%y")
+        today = date.today().strftime("%d.%m.%Y")
 
         past_data = self.db.search(
             Query().tracker_id == tracker_id)
@@ -229,13 +232,17 @@ class TimeTracker(App):
         if today not in past_data:
             past_data[today] = 0
 
-        past_data[today] += time
+        past_data[today] += time - past_data[today]
 
         self.db.upsert(
             {'past_data': past_data}, Query().tracker_id == tracker_id)
+        
+        self.db.update(
+            {'total_time': 0.001, 'refresh_time': 0.001},
+            Query().tracker_id == tracker_id)
 
     def reset_stats_at_new_day(self):
-        today = datetime.date.today().strftime("%d/%m/%y")
+        today = date.today().strftime("%d.%m.%Y")
         trackers = self.root.ids['box'].children
 
         for index in range(len(trackers)):
@@ -259,8 +266,9 @@ class TimeTracker(App):
             plot_date = []
             plot_duration = []
             for key, value in item['past_data'].items():
-                plot_date.append(key.split('/')[0])
+                plot_date.append(int(key.split('.')[0]))
                 plot_duration.append(value/3600)
+            plt.plot(plot_date, plot_duration, 'wo')
             plt.plot(plot_date, plot_duration)
 
         plt.title('Time spent each day', fontsize=22)
@@ -274,7 +282,7 @@ class TimeTracker(App):
         labels = []
         durations = []
         for item in all_data:
-            labels.append(item['tracker_name'])
+            labels.append(item['tracker_name'].replace(" ", "\n"))
             sum_h = 0
             for key, value in item['past_data'].items():
                 sum_h += value
@@ -309,12 +317,31 @@ class TimeTracker(App):
         plt.title('Total time comparison', fontsize=18)
         plt.savefig("pie.png", bbox_inches='tight', pad_inches=0)
 
+    def export_to_excel(self):
+        wb = Workbook()
+        data = self.db.all()
+        ws = wb.active
+
+        for col in range(1, len(data) + 1):
+            ws.cell(column=col * 2 - 1, row=1, value=data[col - 1]['tracker_name'])
+            ws.cell(column=col * 2 - 1, row=2, value='date')
+            ws.cell(column=col * 2, row=2, value='time (s)')
+            
+            past_data = data[col-1]['past_data']
+            dates = list(past_data.keys())
+            times = list(past_data.values())
+            
+            for i in range(len(past_data)):
+                ws.cell(column=col * 2 - 1, row=i + 3, value=dates[i])
+                ws.cell(column=col * 2, row=i + 3, value=times[i])
+
+        wb.save("collector_data.xlsx")
+
 
 if __name__ == '__main__':
     TimeTracker().run()
 
 # TODO:
-#       (export to excel)
 #       (smaller miliseconds)
 #       different background colors
 #       button to turn multi trackers

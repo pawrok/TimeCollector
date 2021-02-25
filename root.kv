@@ -208,6 +208,7 @@
             size_hint_y: 0.23
             text: root.name
 
+
 <MenuPopup@Popup>:
     auto_dismiss: True
     title: 'Menu'
@@ -231,6 +232,15 @@
                 root.dismiss(); \
                 app.plot_past_data(); \
                 Factory.PieGraph().open()
+
+        Button:
+            background_normal: ''
+            background_color: 0, 0, 0, 1
+            text: 'Export data to excel file'
+            on_release:
+                root.dismiss(); \
+                app.export_to_excel()
+
 
 <PieGraph@Popup>:
     title: 'Graphs'
@@ -279,6 +289,7 @@
                     pos: close_btn.pos
 
             Label:
+
 
 <RenamePopup>:
     auto_dismiss: True
