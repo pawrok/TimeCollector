@@ -327,11 +327,11 @@ class TimeTracker(App):
                     value=data[col - 1]['tracker_name'])
             ws.cell(column=col * 2 - 1, row=2, value='date')
             ws.cell(column=col * 2, row=2, value='time (s)')
-            
+
             past_data = data[col-1]['past_data']
             dates = list(past_data.keys())
             times = list(past_data.values())
-            
+
             for i in range(len(past_data)):
                 ws.cell(column=col * 2 - 1, row=i + 3, value=dates[i])
                 ws.cell(column=col * 2, row=i + 3, value=times[i])
@@ -341,9 +341,3 @@ class TimeTracker(App):
 
 if __name__ == '__main__':
     TimeTracker().run()
-
-# TODO:
-#       (smaller miliseconds)
-#       different background colors
-#       button to turn multi trackers
-#       funny theme
