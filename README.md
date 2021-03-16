@@ -10,4 +10,4 @@ TimeCollector allows you to:
 4. Take control of your time spending habits.
 5. Export your data to Excel for advanced insights.
 
-![Alt text](Screenshot 2021-03-16 142316.png?raw=true "Title")
+![Screenshot](Screenshot.png)
