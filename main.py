@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import kivy
 
+
 class RootLayout(BoxLayout):
     pass
 
@@ -137,9 +138,9 @@ class TimeTracker(App):
 
         past_data[today] += tracker.total_duration - past_data[today]
 
-        self.db.update(
-            {'total_time': tracker.total_duration, 'stored_time': tracker.stored_time},
-            Query().tracker_id == tracker_id)
+        self.db.update({'total_time': tracker.total_duration,
+                        'stored_time': tracker.stored_time},
+                       Query().tracker_id == tracker_id)
 
     def update_label(self, dt, start_time, timer_id):
         timer_index = self.trackers_indices.get(timer_id)
@@ -206,7 +207,7 @@ class TimeTracker(App):
 
         self.root.ids['box'].remove_widget(tracker)
         self.match_ids_to_indices()
-        
+
         self.root.ids['box'].height -= TrackerContainer.height.defaultvalue
         self.db.remove(Query().tracker_id == timer_id)
 
