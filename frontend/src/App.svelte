@@ -86,7 +86,7 @@
   }
 </script>
 
-<div class="flex flex-col h-screen max-w-sm mx-auto select-none">
+<div class="flex flex-col h-dvh max-w-sm mx-auto select-none">
   <!-- Header -->
   <header class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
     <h1 class="text-base font-light tracking-[0.25em] text-zinc-400 uppercase">Time Collector</h1>
