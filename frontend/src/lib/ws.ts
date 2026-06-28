@@ -6,6 +6,7 @@ let heartbeatId: ReturnType<typeof setInterval> | null = null;
 let reconnectId: ReturnType<typeof setTimeout> | null = null;
 let attempt = 0;
 let destroyed = false;
+let suspended = false; // true while page is hidden; suppresses auto-reconnect
 
 type OnReconnect = () => void;
 let onReconnect: OnReconnect | null = null;
@@ -16,28 +17,57 @@ function wsUrl(): string {
 }
 
 function connect() {
-  if (destroyed) return;
+  if (destroyed || suspended) return;
   ws = new WebSocket(wsUrl());
 
   ws.onopen = () => {
-    attempt = 0; // reset backoff on successful connection
+    attempt = 0;
     heartbeatId = setInterval(() => {
       if (ws?.readyState === WebSocket.OPEN) ws.send('ping');
     }, 25_000);
-    if (onReconnect) onReconnect(); // refresh tracker state
+    if (onReconnect) onReconnect();
   };
 
   ws.onclose = () => {
     if (heartbeatId !== null) { clearInterval(heartbeatId); heartbeatId = null; }
-    if (destroyed) return;
+    if (destroyed || suspended) return;
     const delay = BACKOFF[Math.min(attempt, BACKOFF.length - 1)];
     attempt++;
     reconnectId = setTimeout(connect, delay);
   };
 }
 
+function goBackground() {
+  // Tell the server this is a deliberate background disconnect (screen off,
+  // tab hidden) so it uses the long grace period instead of the short one.
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'going_background' }));
+  }
+  suspended = true;
+  if (reconnectId !== null) { clearTimeout(reconnectId); reconnectId = null; }
+  if (heartbeatId !== null) { clearInterval(heartbeatId); heartbeatId = null; }
+  ws?.close();
+  ws = null;
+}
+
+function resume() {
+  if (destroyed) return;
+  suspended = false;
+  attempt = 0; // reconnect immediately, no backoff delay
+  connect();
+}
+
 export function initWebSocket(callbacks: { onReconnect: OnReconnect }) {
   onReconnect = callbacks.onReconnect;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      goBackground();
+    } else {
+      resume();
+    }
+  });
+
   connect();
 }
 
