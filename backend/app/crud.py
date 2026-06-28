@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from sqlmodel import Session, select
 from sqlalchemy import text
@@ -82,13 +82,13 @@ def stop_tracker_sessions(db: Session, tracker_id: int):
         .where(TimerSession.end_time == None)
     ).all()
     for s in running:
-        s.end_time = datetime.now()
+        s.end_time = datetime.now(timezone.utc)
         db.add(s)
     db.commit()
 
 
 def stop_all_sessions(db: Session, end_time: Optional[datetime] = None):
-    t = end_time or datetime.now()
+    t = end_time or datetime.now(timezone.utc)
     running = db.exec(
         select(TimerSession).where(TimerSession.end_time == None)
     ).all()
@@ -108,7 +108,7 @@ def get_today_completed_seconds(db: Session, tracker_id: int) -> float:
             FROM session
             WHERE tracker_id = :tid
               AND end_time IS NOT NULL
-              AND date(start_time) = :today
+              AND date(start_time, 'localtime') = :today
         """),
         {"tid": tracker_id, "today": today},
     ).fetchone()
@@ -119,7 +119,7 @@ def get_total_seconds(db: Session, tracker_id: int) -> float:
     row = db.execute(
         text("""
             SELECT COALESCE(SUM(
-                (julianday(COALESCE(end_time, datetime('now', 'localtime')))
+                (julianday(COALESCE(end_time, datetime('now')))
                  - julianday(start_time)) * 86400
             ), 0)
             FROM session
@@ -137,12 +137,12 @@ def get_daily_stats(
 ) -> list:
     query = """
         SELECT
-            date(s.start_time) as day,
+            date(s.start_time, 'localtime') as day,
             s.tracker_id,
             t.name as tracker_name,
             t.color,
             COALESCE(SUM(
-                (julianday(COALESCE(s.end_time, datetime('now', 'localtime')))
+                (julianday(COALESCE(s.end_time, datetime('now')))
                  - julianday(s.start_time)) * 86400
             ), 0) as seconds
         FROM session s
@@ -151,10 +151,10 @@ def get_daily_stats(
     """
     params: dict = {}
     if from_date:
-        query += " AND date(s.start_time) >= :from_date"
+        query += " AND date(s.start_time, 'localtime') >= :from_date"
         params["from_date"] = from_date
     if to_date:
-        query += " AND date(s.start_time) <= :to_date"
+        query += " AND date(s.start_time, 'localtime') <= :to_date"
         params["to_date"] = to_date
     query += " GROUP BY day, s.tracker_id ORDER BY day, s.tracker_id"
     return db.execute(text(query), params).fetchall()
@@ -168,7 +168,7 @@ def get_total_stats(db: Session) -> list:
                 t.name as tracker_name,
                 t.color,
                 COALESCE(SUM(
-                    (julianday(COALESCE(s.end_time, datetime('now', 'localtime')))
+                    (julianday(COALESCE(s.end_time, datetime('now')))
                      - julianday(s.start_time)) * 86400
                 ), 0) as seconds
             FROM session s

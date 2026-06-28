@@ -1,7 +1,7 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -65,7 +65,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        disconnected_at = datetime.now()
+        disconnected_at = datetime.now(timezone.utc)
         connected_clients.discard(websocket)
         if not connected_clients:
             _stop_task = asyncio.create_task(_stop_after_grace(disconnected_at))

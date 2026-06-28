@@ -7,6 +7,8 @@ services:
     volumes:
       - timecollector-data:/data
     restart: unless-stopped
+    environment:
+      TZ: Europe/Warsaw
 
 volumes:
   timecollector-data:
