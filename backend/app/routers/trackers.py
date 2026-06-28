@@ -1,3 +1,4 @@
+from datetime import timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from typing import List
@@ -10,6 +11,11 @@ from ..schemas import TrackerCreate, TrackerUpdate, TrackerRead
 router = APIRouter(prefix="/trackers", tags=["trackers"])
 
 
+def _utc(dt):
+    """SQLite strips tzinfo on read-back; re-attach UTC so Pydantic emits 'Z'."""
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def build_read(db: Session, tracker: Tracker) -> TrackerRead:
     running = crud.get_running_session(db, tracker.id)
     return TrackerRead(
@@ -20,7 +26,7 @@ def build_read(db: Session, tracker: Tracker) -> TrackerRead:
         archived=tracker.archived,
         created_at=tracker.created_at,
         is_running=running is not None,
-        running_since=running.start_time if running else None,
+        running_since=_utc(running.start_time) if running else None,
         today_completed_seconds=crud.get_today_completed_seconds(db, tracker.id),
         total_seconds=crud.get_total_seconds(db, tracker.id),
     )
