@@ -1,0 +1,18 @@
+.git
+.gitignore
+.vscode
+node_modules
+frontend/dist
+backend/timecollector.db
+**/__pycache__
+**/*.pyc
+*.log
+
+# old Kivy app files — not needed in Docker
+main.py
+root.kv
+fonts/
+icons/
+Screenshot*.png
+db.json
+backend/seed.py

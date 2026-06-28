@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timecollector-backend"
+version = "2.0.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "sqlmodel>=0.0.19",
+    "openpyxl>=3.1",
+    "websockets>=12.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -1,8 +1,28 @@
-db.json
+# ── Python ───────────────────────────────────────────────
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+
+# ── Backend data / runtime ───────────────────────────────
+backend/timecollector.db
+backend/seed.py.bak
+
+# ── Frontend build ───────────────────────────────────────
+frontend/dist/
+frontend/node_modules/
+
+# ── Old Kivy app artifacts ───────────────────────────────
+db.json
 linear.png
 pie.png
+collector_data.xlsx
+
+# ── Editor ───────────────────────────────────────────────
 .vscode/launch.json
 .vscode/settings.json
-test.py
-collector_data.xlsx
+.idea/
+*.swp

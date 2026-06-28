@@ -1,0 +1,12 @@
+services:
+  timecollector:
+    build: .
+    image: timecollector
+    ports:
+      - "8000:8000"
+    volumes:
+      - timecollector-data:/data
+    restart: unless-stopped
+
+volumes:
+  timecollector-data:
